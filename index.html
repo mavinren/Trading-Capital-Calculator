@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Capital Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+    <style>
+        :root {
+            --primary-color: #2962ff;
+            --secondary-color: #0039cb;
+            --success-color: #00c853;
+            --success-dark: #64dd17;
+            --background-color: #1a1a1a;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-speed);
+        }
+
+        .navbar-link:hover {
+            color: var(--primary-color);
+        }
+
+        /* Footer Styles */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .footer-text {
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .footer-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Custom Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+        }
+
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.1);
+        }
+
+        /* Ensure smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 80px 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        .background::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            animation: backgroundScroll 30s linear infinite;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            overflow-y: auto;
+            max-height: 90vh;
+            scrollbar-gutter: stable;
+            padding-right: calc(2rem + 4px);
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .inputs-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .results-section {
+            position: sticky;
+            top: 0;
+            scrollbar-gutter: stable;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards 0.3s;
+            grid-column: 1 / -1;
+        }
+
+        .input-group {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            transition: transform var(--transition-speed);
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+            animation-delay: calc(var(--item-index) * 0.1s + 0.5s);
+        }
+
+        .input-group:hover {
+            transform: translateX(10px);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all var(--transition-speed);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards 1s;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(41, 98, 255, 0.3);
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, var(--success-color), var(--success-dark));
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(45deg, var(--success-dark), var(--success-color));
+            box-shadow: 0 8px 20px rgba(0, 200, 83, 0.3);
+        }
+
+        .results {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-top: 0;
+            opacity: 0;
+            transform: translateY(20px);
+            scrollbar-gutter: stable;
+        }
+
+        .results.show {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+            animation-delay: calc(var(--item-index) * 0.1s);
+            transition: transform var(--transition-speed);
+        }
+
+        .result-item:hover {
+            transform: scale(1.02);
+        }
+
+        .sensitivity {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .sensitivity h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            margin: 20px auto;
+            display: none;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes backgroundScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 100% 100%; }
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1024px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+                max-height: 85vh;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .navbar-links {
+                margin-top: 1rem;
+                gap: 1rem;
+            }
+
+            body {
+                padding-top: 120px;
+            }
+
+            .container {
+                margin: 1rem;
+            }
+
+            .input-group {
+                display: block;
+            }
+
+            label {
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .input-group {
+                display: grid;
+                grid-template-columns: 200px 1fr;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            label {
+                margin-bottom: 0;
+            }
+        }
+
+        .chart-container {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards 0.3s;
+        }
+
+        #performanceChart {
+            width: 100% !important;
+            height: 300px !important;
+        }
+
+        .results {
+            margin-top: 0;  /* Remove top margin since chart is above */
+        }
+    </style>
+</head>
+<body></body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">
+            <i class="fas fa-chart-line"></i>
+            Trading Capital Calculator
+        </a>
+        <div class="navbar-links">
+            <a href="#" class="navbar-link">Home</a>
+            <a href="about.html" class="navbar-link">About</a>
+            <a href="contact.html" class="navbar-link">Contact</a>
+        </div>
+    </nav>
+
+    <div class="background"></div>
+    
+    <div class="container">
+        <h1>Trading Capital Calculator</h1>
+        
+        <div class="calculator-grid">
+            <div class="inputs-section">
+                <div class="input-group" style="--item-index: 0">
+                    <label for="monthlyTarget">Monthly Target ($)</label>
+                    <input type="number" id="monthlyTarget" value="5000" min="0">
+                </div>
+                
+                <div class="input-group" style="--item-index: 1">
+                    <label for="riskPerTrade">Risk per Trade (%)</label>
+                    <input type="number" id="riskPerTrade" value="1" step="0.1" min="0" max="100">
+                </div>
+                
+                <div class="input-group" style="--item-index: 2">
+                    <label for="tradesPerMonth">Trades per Month</label>
+                    <input type="number" id="tradesPerMonth" value="26" min="0">
+                </div>
+                
+                <div class="input-group" style="--item-index: 3">
+                    <label for="winRate">Win Rate (%)</label>
+                    <input type="number" id="winRate" value="40" step="0.1" min="0" max="100">
+                </div>
+                
+                <div class="input-group" style="--item-index: 4">
+                    <label for="riskRewardRatio">Risk-Reward Ratio</label>
+                    <input type="number" id="riskRewardRatio" value="2" step="0.1" min="0">
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="calculateWithAnimation()">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                    <button onclick="downloadSampleTrades()" class="download-btn">
+                        <i class="fas fa-download"></i> Download Sample Trades
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="spinner" id="spinner"></div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                <div class="results" id="results">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text">
+            Built with ❤️ by <a href="#" class="footer-link">Mavin Emmanuel</a> | © 2024 All Rights Reserved
+        </p>
+    </footer>
+
+    <script>
+        function calculate() {
+            const monthlyTarget = parseFloat(document.getElementById('monthlyTarget').value);
+            const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) / 100;
+            const tradesPerMonth = parseFloat(document.getElementById('tradesPerMonth').value);
+            const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+            const riskRewardRatio = parseFloat(document.getElementById('riskRewardRatio').value);
+            
+            const winningTrades = winRate * tradesPerMonth;
+            const losingTrades = tradesPerMonth - winningTrades;
+            
+            const profitPerWin = riskRewardRatio * riskPerTrade;
+            const totalProfitFactor = winningTrades * profitPerWin;
+            const totalLossFactor = losingTrades * riskPerTrade;
+            const netProfitFactor = totalProfitFactor - totalLossFactor;
+            
+            const requiredCapital = monthlyTarget / netProfitFactor;
+            const expectedMonthlyProfit = netProfitFactor * requiredCapital;
+
+            // Generate sample trades and update chart
+            const trades = generateSampleTrades(tradesPerMonth, winRate, riskPerTrade, riskRewardRatio, requiredCapital);
+            updatePerformanceChart(trades);
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2>Results</h2>
+                <div class="result-item" style="--item-index: 0">
+                    <strong>Required Trading Capital:</strong> $${requiredCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+                <div class="result-item" style="--item-index: 1">
+                    <strong>Expected Monthly Profit:</strong> $${expectedMonthlyProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+                <div class="result-item" style="--item-index: 2">
+                    <strong>Winning Trades per Month:</strong> ${winningTrades.toFixed(1)}
+                </div>
+                <div class="result-item" style="--item-index: 3">
+                    <strong>Losing Trades per Month:</strong> ${losingTrades.toFixed(1)}
+                </div>
+                
+                <div class="sensitivity">
+                    <h3>Sensitivity Analysis</h3>
+                    <div class="result-item" style="--item-index: 4">
+                        <strong>With 5% Higher Win Rate:</strong> $${calculateWithNewWinRate(winRate + 0.05).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                    <div class="result-item" style="--item-index: 5">
+                        <strong>With +1 Risk-Reward Ratio:</strong> $${calculateWithNewRR(riskRewardRatio + 1).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateWithNewWinRate(newWinRate) {
+            const monthlyTarget = parseFloat(document.getElementById('monthlyTarget').value);
+            const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) / 100;
+            const tradesPerMonth = parseFloat(document.getElementById('tradesPerMonth').value);
+            const riskRewardRatio = parseFloat(document.getElementById('riskRewardRatio').value);
+            
+            const winningTrades = newWinRate * tradesPerMonth;
+            const losingTrades = tradesPerMonth - winningTrades;
+            
+            const profitPerWin = riskRewardRatio * riskPerTrade;
+            const totalProfitFactor = winningTrades * profitPerWin;
+            const totalLossFactor = losingTrades * riskPerTrade;
+            const netProfitFactor = totalProfitFactor - totalLossFactor;
+            
+            return monthlyTarget / netProfitFactor;
+        }
+
+        function calculateWithNewRR(newRR) {
+            const monthlyTarget = parseFloat(document.getElementById('monthlyTarget').value);
+            const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) / 100;
+            const tradesPerMonth = parseFloat(document.getElementById('tradesPerMonth').value);
+            const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+            
+            const winningTrades = winRate * tradesPerMonth;
+            const losingTrades = tradesPerMonth - winningTrades;
+            
+            const profitPerWin = newRR * riskPerTrade;
+            const totalProfitFactor = winningTrades * profitPerWin;
+            const totalLossFactor = losingTrades * riskPerTrade;
+            const netProfitFactor = totalProfitFactor - totalLossFactor;
+            
+            return monthlyTarget / netProfitFactor;
+        }
+
+        function updatePerformanceChart(trades) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.performanceChart instanceof Chart) {
+                window.performanceChart.destroy();
+            }
+
+            const labels = trades.map((_, index) => `Trade ${index + 1}`);
+            const balances = trades.map(trade => trade.balance);
+            const startingBalance = balances[0] - trades[0].profitLoss;
+
+            window.performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Account Balance',
+                        data: [startingBalance, ...balances],
+                        borderColor: 'rgb(41, 98, 255)',
+                        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Account Balance Progression',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Balance: $${context.parsed.y.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    })}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        function downloadSampleTrades() {
+            const monthlyTarget = parseFloat(document.getElementById('monthlyTarget').value);
+            const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) / 100;
+            const tradesPerMonth = parseInt(document.getElementById('tradesPerMonth').value);
+            const winRate = parseFloat(document.getElementById('winRate').value) / 100;
+            const riskRewardRatio = parseFloat(document.getElementById('riskRewardRatio').value);
+            
+            const requiredCapital = monthlyTarget / (winRate * tradesPerMonth * riskRewardRatio * riskPerTrade - (1 - winRate) * tradesPerMonth * riskPerTrade);
+            
+            const trades = generateSampleTrades(tradesPerMonth, winRate, riskPerTrade, riskRewardRatio, requiredCapital);
+            
+            // Update the performance chart
+            updatePerformanceChart(trades);
+            
+            // Continue with PDF generation
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Sample Trading Results', 14, 20);
+
+            doc.setFontSize(12);
+            doc.text('Trading Parameters:', 14, 30);
+            doc.setFontSize(10);
+            doc.text(`Monthly Target: $${monthlyTarget.toLocaleString()}`, 14, 40);
+            doc.text(`Risk per Trade: ${(riskPerTrade * 100).toFixed(1)}%`, 14, 45);
+            doc.text(`Trades per Month: ${tradesPerMonth}`, 14, 50);
+            doc.text(`Win Rate: ${(winRate * 100).toFixed(1)}%`, 14, 55);
+            doc.text(`Risk-Reward Ratio: ${riskRewardRatio}:1`, 14, 60);
+            doc.text(`Required Capital: $${requiredCapital.toLocaleString()}`, 14, 65);
+
+            doc.autoTable({
+                startY: 75,
+                head: [['Trade #', 'Entry Date', 'Result', 'Risk Amount', 'Profit/Loss', 'Account Balance']],
+                body: trades.map((trade, index) => [
+                    index + 1,
+                    trade.date,
+                    trade.result,
+                    `$${trade.riskAmount.toFixed(2)}`,
+                    `$${trade.profitLoss.toFixed(2)}`,
+                    `$${trade.balance.toFixed(2)}`
+                ]),
+                theme: 'grid',
+                headStyles: { fillColor: [41, 98, 255] },
+                alternateRowStyles: { fillColor: [245, 245, 245] }
+            });
+
+            const finalBalance = trades[trades.length - 1].balance;
+            const totalProfitLoss = finalBalance - requiredCapital;
+            const winningTrades = trades.filter(t => t.result === 'Win').length;
+            const actualWinRate = (winningTrades / trades.length * 100).toFixed(1);
+
+            doc.setFontSize(12);
+            doc.text('Trading Summary:', 14, doc.lastAutoTable.finalY + 20);
+            doc.setFontSize(10);
+            doc.text(`Final Balance: $${finalBalance.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 30);
+            doc.text(`Total Profit/Loss: $${totalProfitLoss.toLocaleString()}`, 14, doc.lastAutoTable.finalY + 35);
+            doc.text(`Actual Win Rate: ${actualWinRate}%`, 14, doc.lastAutoTable.finalY + 40);
+
+            doc.save('sample-trading-results.pdf');
+        }
+
+        function generateSampleTrades(numTrades, winRate, riskPerTrade, riskRewardRatio, startingBalance) {
+            const trades = [];
+            let currentBalance = startingBalance;
+            let currentDate = new Date();
+            
+            // Calculate exact number of winning trades needed
+            const exactWinningTrades = Math.floor(numTrades * winRate);
+            const exactLosingTrades = numTrades - exactWinningTrades;
+            
+            // Create array of results with exact win/loss ratio
+            const results = [];
+            for (let i = 0; i < exactWinningTrades; i++) results.push('Win');
+            for (let i = 0; i < exactLosingTrades; i++) results.push('Loss');
+            
+            // Fisher-Yates shuffle algorithm for better randomization
+            for (let i = results.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [results[i], results[j]] = [results[j], results[i]];
+            }
+            
+            // Generate trades using the pre-determined results
+            for (let i = 0; i < numTrades; i++) {
+                const isWin = results[i] === 'Win';
+                const riskAmount = currentBalance * riskPerTrade;
+                const profitLoss = isWin 
+                    ? riskAmount * riskRewardRatio 
+                    : -riskAmount;
+
+                currentBalance += profitLoss;
+                
+                trades.push({
+                    date: currentDate.toLocaleDateString(),
+                    result: results[i],
+                    riskAmount: riskAmount,
+                    profitLoss: profitLoss,
+                    balance: currentBalance
+                });
+
+                // Advance to next trading day (skip weekends)
+                do {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                } while (currentDate.getDay() === 0 || currentDate.getDay() === 6);
+            }
+
+            // Verify win rate is exact
+            const actualWins = trades.filter(t => t.result === 'Win').length;
+            const actualWinRate = actualWins / numTrades;
+            console.log(`Target Win Rate: ${winRate}, Actual Win Rate: ${actualWinRate}`);
+
+            return trades;
+        }
+
+        function calculateWithAnimation() {
+            const spinner = document.getElementById('spinner');
+            const resultsDiv = document.getElementById('results');
+            
+            spinner.style.display = 'block';
+            resultsDiv.style.opacity = '0';
+            
+            setTimeout(() => {
+                spinner.style.display = 'none';
+                calculate();
+                resultsDiv.classList.remove('show');
+                void resultsDiv.offsetWidth;
+                resultsDiv.classList.add('show');
+            }, 500);
+        }
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value < 0) this.value = 0;
+                if (this.id === 'winRate' && this.value > 100) this.value = 100;
+                if (this.id === 'riskPerTrade' && this.value > 100) this.value = 100;
+            });
+
+            let timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(calculateWithAnimation, 500);
+            });
+        });
+
+        window.addEventListener('load', calculateWithAnimation);
+    </script>
+</body>
+</html>
